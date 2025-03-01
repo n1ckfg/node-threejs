@@ -30,11 +30,6 @@ const port_http = process.env.PORT_HTTP || 8080;
 const port_https = process.env.PORT_HTTPS || 443;
 const port_ws = process.env.PORT_WS || 4321;
 
-const WebSocket = require("ws");
-const ws = new WebSocket.Server({ port: port_ws, pingInterval: ping_interval, pingTimeout: ping_timeout }, function() {
-    console.log("\nNode.js listening on websocket port " + port_ws);
-});
-
 if (!debug) {
     http = require("http");
 
@@ -59,21 +54,6 @@ if (!debug) {
 app.use(express.static("public")); 
 
 app.use(bodyParser.json());
-
-const onWebhook = (req, res) => {
-  let hmac = crypto.createHmac("sha1", process.env.SECRET);
-  let sig  = `sha1=${hmac.update(JSON.stringify(req.body)).digest("hex")}`;
-
-  if (req.headers["x-github-event"] === "push" && sig === req.headers["x-hub-signature"]) {
-    cmd.run("chmod +x ./redeploy.sh"); 
-    cmd.run("./redeploy.sh");
-    cmd.run("refresh");
-  }
-
-  return res.sendStatus(200);
-}
-
-app.post("/redeploy", onWebhook);
 
 app.get("/", function(req, res) {
     res.sendFile(__dirname + "/public/index.html");
@@ -138,8 +118,6 @@ setInterval(function() {
     }
 }, strokeLifetime);
 
-let lastIndex = 0; // for ws
-
 io.on("connection", function(socket) {
     console.log("A socket.io user connected.");
 
@@ -159,7 +137,6 @@ io.on("connection", function(socket) {
     socket.on("clientRequestFrame", function(data) {
         let index = data["num"];
         if (index != NaN) {
-            lastIndex = index; // for ws
             let frame = layer.getFrame(index);
             if (frame && frame.strokes.length > 0) {
                 io.emit("newFrameFromServer", frame.strokes);
@@ -167,23 +144,4 @@ io.on("connection", function(socket) {
             }
         }
     });
-});
-
-ws.on("connection", function(socket) {
-    console.log("A ws user connected.");
-
-    socket.onclose = function(event) {
-        console.log("A ws user disconnected.");
-    };
-
-    socket.onmessage = function(event) {
-        let index = lastIndex;
-        if (index != NaN) {
-            let frame = layer.getFrame(index);
-            if (frame && frame.strokes.length > 0) {
-                socket.send(JSON.stringify(frame.strokes));
-                console.log("> WS > Sending a new frame " + frame.strokes[0]["index"] + " with " + frame.strokes.length + " strokes.");
-            }
-        }
-    };
 });

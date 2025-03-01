@@ -9,7 +9,7 @@ Bigger strokes create more randomness.
 <html>
 
 	<head>
-		<title>Lightning Loops</title>
+		<title>node-threejs</title>
 		
 		<link rel="stylesheet" href="./css/main.css"/>
 
@@ -85,11 +85,6 @@ Bigger strokes create more randomness.
 
 			let boxWidth, params, manager, lastRender;
 
-			let armSaveJson = false;
-			let armFrameForward = false;
-			let armFrameBack = false;
-			let armTogglePause = false;
-
 			let drawWhilePlaying = true;
 			let clicked = false;
 
@@ -164,24 +159,6 @@ Bigger strokes create more randomness.
 
 			    updateWasd();
 
-			    if (armFrameForward) {
-			        armFrameForward = false;
-			        isPlaying = false;
-			        frameForward();
-			        console.log("ff");
-			    }
-			    if (armFrameBack) {
-			        armFrameBack = false;
-			        isPlaying = false;
-			        frameBack();
-			        console.log("rew");
-			    }
-			    if (armTogglePause) {
-			        isPlaying = !isPlaying;
-			        console.log("playing: " + isPlaying);
-			        armTogglePause = false;
-			    }
-
 			    if (isPlaying) {
 			        pTime = time;
 			        time = new Date().getTime() / 1000;
@@ -205,12 +182,6 @@ Bigger strokes create more randomness.
 			    }
 
 			    refreshLocalFrame();
-
-			    if (armSaveJson) {
-			        armSaveJson = false;
-			        isPlaying = false;
-			        writeJson();
-			    }  
 
 			    composer.render();
 			    requestAnimationFrame(draw);     
@@ -289,15 +260,15 @@ Bigger strokes create more randomness.
 			}
 
 			function updateStroke(x, y, z) {
-          localTempVec3Array.push(new THREE.Vector3(x, y, z));
-          console.log("Update " + localTempVec3Array.length + " points."); 
+          		localTempVec3Array.push(new THREE.Vector3(x, y, z));
+          		console.log("Update " + localTempVec3Array.length + " points."); 
 			}
 
 			function endStroke() {  
 				isDrawing = false;
-        createStroke(localTempVec3Array, 0);
-        socket.emit("clientStrokeToServer", tempStrokeToJson());
-        console.log("End stroke.");
+        		createStroke(localTempVec3Array, 0);
+        		socket.emit("clientStrokeToServer", tempStrokeToJson());
+        		console.log("End stroke.");
 			}
 
 			function createStroke(vec3Array, index) {

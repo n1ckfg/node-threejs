@@ -13,8 +13,6 @@ socket.on("newFrameFromServer", function(data) {
             origVerts.push(new THREE.Vector3(co[0], co[1], co[2]));
         }
         
-        createStroke(origVerts, 1);
-        
-        getMagentaButton(origVerts);
+        createStroke(origVerts, 1);        
 	}
 });
